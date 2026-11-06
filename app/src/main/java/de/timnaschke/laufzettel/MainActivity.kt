@@ -5,7 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,17 +16,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.DragHandle
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -33,16 +37,35 @@ import androidx.compose.ui.unit.dp
 import de.timnaschke.laufzettel.ui.theme.LaufzettelTheme
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlin.random.Random
+
+data class Item(var name: String, var description: String = "desc")
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val list = mutableStateListOf<Item>(
+            Item("a"),
+            Item("b"),
+            Item("c"),
+            Item("d")
+        )
+
         enableEdgeToEdge()
-        val elements = listOf<String>("a", "b", "c")
         setContent {
             LaufzettelTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ReorderableList(elements, Modifier.padding(innerPadding))
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    floatingActionButton = {
+                        FloatingActionButton(
+                            onClick = {list.add(Item(Random.nextInt().toString()))}
+                        ) {
+                            Icon(Icons.Rounded.Add, contentDescription = "Add")
+                        }
+                    }
+                ) { innerPadding ->
+                    ReorderableList(list, Modifier.padding(innerPadding))
                 }
             }
         }
@@ -50,14 +73,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ReorderableList(elements: List<String>, modifier: Modifier) {
+fun ReorderableList(list: MutableList<Item>, modifier: Modifier) {
     val hapticFeedback = LocalHapticFeedback.current
 
-    //var list by remember { mutableStateOf(List(100) { "Item $it" }) }
-    var list by remember { mutableStateOf(elements) }
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        list = list.toMutableList().apply {
+        list.apply {
             add(to.index, removeAt(from.index))
         }
 
@@ -65,19 +86,21 @@ fun ReorderableList(elements: List<String>, modifier: Modifier) {
     }
 
     LazyColumn(
-        modifier = modifier,
-        //modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         state = lazyListState,
         contentPadding = PaddingValues(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(list, key = { it }) {
-            ReorderableItem(reorderableLazyListState, key = it) { isDragging ->
+        items(list, key = { it.name }) {
+            ReorderableItem(reorderableLazyListState, key = it.name) { isDragging ->
                 val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
 
                 Surface(shadowElevation = elevation) {
-                    Row {
-                        Text(it, Modifier.padding(horizontal = 8.dp))
+                    Row(Modifier.background(colorScheme.primary, shapes.small)) {
+                        Column(Modifier.weight(1f)) {
+                            Text(it.name, Modifier.padding(horizontal = 8.dp))
+                            Text(it.description, Modifier.padding(horizontal = 8.dp))
+                        }
                         IconButton(
                             modifier = Modifier.draggableHandle(
                                 onDragStarted = {
@@ -102,8 +125,13 @@ fun ReorderableList(elements: List<String>, modifier: Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun Preview() {
-    val elements = listOf<String>("a", "b", "c")
+    val list = mutableStateListOf<Item>(
+        Item("a"),
+        Item("b"),
+        Item("c"),
+        Item("d")
+    )
     LaufzettelTheme {
-        ReorderableList(elements, Modifier)
+        ReorderableList(list, Modifier)
     }
 }
