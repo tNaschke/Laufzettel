@@ -28,44 +28,79 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import de.timnaschke.laufzettel.ui.theme.LaufzettelTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import kotlin.random.Random
 
-data class Item(var name: String, var description: String = "desc")
+data class Item(val name: String, val description: String = "desc")
+
+class ItemViewModel : ViewModel() {
+    private val _items = MutableStateFlow(listOf(
+        Item("a"),
+        Item("b"),
+        Item("c"),
+        Item("x")
+    ))
+    val items: StateFlow<List<Item>> = _items.asStateFlow()
+
+    fun add(newItem: Item) {
+        _items.update { itemList ->
+            itemList.toMutableList().apply {
+                add(newItem)
+            }
+        }
+    }
+
+    fun remove(toRemoveItem: Item) {
+        _items.update { itemList ->
+            itemList.toMutableList().apply {
+                remove(toRemoveItem)
+            }
+        }
+    }
+
+    fun move(from: Int, to: Int) {
+        _items.update { itemList ->
+            itemList.toMutableList().apply {
+                add(to, removeAt(from))
+            }
+        }
+    }
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val list = mutableStateListOf<Item>(
-            Item("a"),
-            Item("b"),
-            Item("c"),
-            Item("d")
-        )
-
         enableEdgeToEdge()
         setContent {
             LaufzettelTheme {
+                val itemViewModel: ItemViewModel = viewModel()
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     floatingActionButton = {
                         FloatingActionButton(
-                            onClick = {list.add(Item(Random.nextInt().toString()))}
+                            onClick = {itemViewModel.add(Item(Random.nextInt().toString()))}
                         ) {
                             Icon(Icons.Rounded.Add, contentDescription = "Add")
                         }
                     }
                 ) { innerPadding ->
-                    ReorderableList(list, Modifier.padding(innerPadding))
+                    ReorderableList(itemViewModel, Modifier.padding(innerPadding))
                 }
             }
         }
@@ -73,15 +108,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ReorderableList(list: MutableList<Item>, modifier: Modifier) {
+fun ReorderableList(itemViewModel: ItemViewModel, modifier: Modifier) {
     val hapticFeedback = LocalHapticFeedback.current
 
+    val items by itemViewModel.items.collectAsStateWithLifecycle()
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        list.apply {
-            add(to.index, removeAt(from.index))
-        }
-
+        itemViewModel.move(from.index, to.index)
         hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
     }
 
@@ -91,7 +124,7 @@ fun ReorderableList(list: MutableList<Item>, modifier: Modifier) {
         contentPadding = PaddingValues(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(list, key = { it.name }) {
+        items(items, key = { item -> item.name }) {
             ReorderableItem(reorderableLazyListState, key = it.name) { isDragging ->
                 val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
 
@@ -125,13 +158,8 @@ fun ReorderableList(list: MutableList<Item>, modifier: Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun Preview() {
-    val list = mutableStateListOf<Item>(
-        Item("a"),
-        Item("b"),
-        Item("c"),
-        Item("d")
-    )
     LaufzettelTheme {
-        ReorderableList(list, Modifier)
+        val itemViewModel: ItemViewModel = viewModel()
+        ReorderableList(itemViewModel, Modifier)
     }
 }
