@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -124,25 +123,22 @@ fun ReorderableList(itemViewModel: ItemViewModel, modifier: Modifier) {
         contentPadding = PaddingValues(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(items, key = { item -> item.name }) {
-            ReorderableItem(reorderableLazyListState, key = it.name) { isDragging ->
+        items(items, key = { item -> item.name }) { item ->
+            ReorderableItem(reorderableLazyListState, key = item.name) { isDragging ->
                 val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
 
-                Surface(shadowElevation = elevation) {
-                    Row(Modifier.background(colorScheme.primary, shapes.small)) {
+                Surface(
+                    shape = shapes.small,
+                    color = colorScheme.primary,
+                    shadowElevation = elevation
+                ) {
+                    Row {
                         Column(Modifier.weight(1f)) {
-                            Text(it.name, Modifier.padding(horizontal = 8.dp))
-                            Text(it.description, Modifier.padding(horizontal = 8.dp))
+                            Text(item.name, Modifier.padding(horizontal = 8.dp))
+                            Text(item.description, Modifier.padding(horizontal = 8.dp))
                         }
                         IconButton(
-                            modifier = Modifier.draggableHandle(
-                                onDragStarted = {
-                                    //hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                                },
-                                onDragStopped = {
-                                    //hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                },
-                            ),
+                            modifier = Modifier.draggableHandle(),
                             onClick = {},
                         ) {
                             Icon(Icons.Rounded.DragHandle, contentDescription = "Reorder")
