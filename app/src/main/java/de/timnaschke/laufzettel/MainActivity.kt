@@ -50,10 +50,10 @@ class ItemViewModel : ViewModel() {
     private var _order = mutableSetOf(
         "b",
         "a",
-        "b",
         "c",
         "d",
-        "e"
+        "e",
+        "x"
     )
     private val _items = MutableStateFlow(listOf(
         Item("a"),
@@ -89,17 +89,12 @@ class ItemViewModel : ViewModel() {
 
     fun move(from: Int, to: Int) {
         _order = _order.toMutableList().apply{
-            val movedName = _items.value[from].name
-            remove(movedName)
-            add(indexOf(_items.value[to].name), movedName)
+            val orderFrom = indexOf(_items.value[from].name)
+            val orderTo = indexOf(_items.value[to].name)
+            add(orderTo, removeAt(orderFrom))
         }.toMutableSet()
 
         _items.update { itemList -> itemList.sortedBy { item -> _order.indexOf(item.name) } }
-        //_items.update { itemList ->
-        //    itemList.toMutableList().apply {
-        //        add(to, removeAt(from))
-        //    }
-        //}
     }
 }
 
@@ -153,7 +148,8 @@ fun ReorderableList(itemViewModel: ItemViewModel, modifier: Modifier) {
                 Surface(
                     shape = shapes.small,
                     color = colorScheme.primary,
-                    shadowElevation = elevation
+                    shadowElevation = elevation,
+                    onClick = { itemViewModel.remove(item) }
                 ) {
                     Row {
                         Column(Modifier.weight(1f)) {
