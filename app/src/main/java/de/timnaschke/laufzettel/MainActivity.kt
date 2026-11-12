@@ -47,18 +47,34 @@ import kotlin.random.Random
 data class Item(val name: String, val description: String = "desc")
 
 class ItemViewModel : ViewModel() {
+    private var _order = mutableSetOf(
+        "b",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+    )
     private val _items = MutableStateFlow(listOf(
         Item("a"),
         Item("b"),
         Item("c"),
         Item("x")
-    ))
+    ).sortedBy { item ->
+        _order.indexOf(item.name)
+    })
     val items: StateFlow<List<Item>> = _items.asStateFlow()
 
     fun add(newItem: Item) {
+        if (! _order.contains(newItem.name)) {
+            _order.add(newItem.name)
+        }
+
         _items.update { itemList ->
             itemList.toMutableList().apply {
                 add(newItem)
+            }.sortedBy { item ->
+                _order.indexOf(item.name)
             }
         }
     }
@@ -72,11 +88,18 @@ class ItemViewModel : ViewModel() {
     }
 
     fun move(from: Int, to: Int) {
-        _items.update { itemList ->
-            itemList.toMutableList().apply {
-                add(to, removeAt(from))
-            }
-        }
+        _order = _order.toMutableList().apply{
+            val movedName = _items.value[from].name
+            remove(movedName)
+            add(indexOf(_items.value[to].name), movedName)
+        }.toMutableSet()
+
+        _items.update { itemList -> itemList.sortedBy { item -> _order.indexOf(item.name) } }
+        //_items.update { itemList ->
+        //    itemList.toMutableList().apply {
+        //        add(to, removeAt(from))
+        //    }
+        //}
     }
 }
 
