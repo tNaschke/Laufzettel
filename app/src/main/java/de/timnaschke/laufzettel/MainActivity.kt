@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,8 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -130,7 +133,7 @@ class MainActivity : ComponentActivity() {
                         ModalBottomSheet(
                             onDismissRequest = { showBottomSheet = false }
                         ) {
-                            Text("Test")
+                            ItemSearch()
                         }
                     }
                 }
@@ -181,6 +184,26 @@ fun ReorderableList(itemViewModel: ItemViewModel, modifier: Modifier) {
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ItemSearch() {
+    Box {
+        SearchBar(
+            inputField = {
+                SearchBarDefaults.InputField(
+                    query = "Query",
+                    onQueryChange = {},
+                    onSearch = {},
+                    expanded = true,
+                    onExpandedChange = {}
+                )
+            },
+            expanded = true,
+            onExpandedChange = {}
+        ) {}
     }
 }
 
