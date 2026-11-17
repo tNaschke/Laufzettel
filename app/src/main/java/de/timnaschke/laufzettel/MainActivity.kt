@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.DragHandle
@@ -190,19 +191,22 @@ fun ReorderableList(itemViewModel: ItemViewModel, modifier: Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemSearch() {
+    val addQueryState = rememberTextFieldState()
+    var expanded by remember { mutableStateOf(true) }
+
     Box {
         SearchBar(
             inputField = {
                 SearchBarDefaults.InputField(
-                    query = "Query",
-                    onQueryChange = {},
+                    query = addQueryState.text.toString(),
+                    onQueryChange = { addQueryState.edit { replace(0, length, it) } },
                     onSearch = {},
-                    expanded = true,
-                    onExpandedChange = {}
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it }
                 )
             },
-            expanded = true,
-            onExpandedChange = {}
+            expanded = expanded,
+            onExpandedChange = { expanded = it}
         ) {}
     }
 }
