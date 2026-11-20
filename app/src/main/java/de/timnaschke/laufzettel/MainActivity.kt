@@ -109,6 +109,10 @@ class ItemViewModel : ViewModel() {
 
         _items.update { itemList -> itemList.sortedBy { item -> _order.indexOf(item.name) } }
     }
+
+    fun getOrder() : List<String> {
+        return _order.toList()
+    }
 }
 
 class MainActivity : ComponentActivity() {
@@ -201,7 +205,6 @@ fun ReorderableList(itemViewModel: ItemViewModel, modifier: Modifier) {
 fun ItemSearch(itemViewModel: ItemViewModel, onExpandedChange: (Boolean) -> Unit) {
     val addQueryState = rememberTextFieldState()
     //var expanded by remember { mutableStateOf(true) }
-    val searchResults = listOf("ax", "bx", "cx", "dy")
     val supportingContent: (@Composable (String) -> Unit)? = null
     val leadingContent: (@Composable () -> Unit)? = null
 
@@ -221,18 +224,20 @@ fun ItemSearch(itemViewModel: ItemViewModel, onExpandedChange: (Boolean) -> Unit
             onExpandedChange = onExpandedChange
         ) {
             LazyColumn {
-                items(count = searchResults.size) { index ->
-                    val resultText = searchResults[index]
-                    ListItem(
-                        headlineContent = { Text(resultText) },
-                        supportingContent = supportingContent?.let { { it(resultText) } },
-                        leadingContent = leadingContent,
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                        modifier = Modifier
-                            .clickable {}
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
-                    )
+                items(count = itemViewModel.getOrder().size) { index ->
+                    val resultText = itemViewModel.getOrder()[index]
+                    if (resultText.contains(addQueryState.text, ignoreCase = true)) {
+                        ListItem(
+                            headlineContent = { Text(resultText) },
+                            supportingContent = supportingContent?.let { { it(resultText) } },
+                            leadingContent = leadingContent,
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            modifier = Modifier
+                                .clickable {}
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                        )
+                    }
                 }
             }
         }
