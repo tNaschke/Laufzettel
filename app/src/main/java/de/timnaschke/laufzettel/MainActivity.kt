@@ -56,8 +56,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import java.util.UUID
 
-data class Item(val name: String, val description: String = "desc")
+data class Item(
+    val name: String,
+    val description: String = "desc",
+    val uuid: String = UUID.randomUUID().toString()
+)
 
 class ItemViewModel : ViewModel() {
     private var _order = mutableSetOf(
@@ -69,7 +74,7 @@ class ItemViewModel : ViewModel() {
         "x"
     )
     private val _items = MutableStateFlow(listOf(
-        Item("a"),
+        Item("a", ""),
         Item("b"),
         Item("c"),
         Item("x")
@@ -105,6 +110,14 @@ class ItemViewModel : ViewModel() {
     }
 
     fun move(from: Int, to: Int) {
+        if (_items.value[from].name == _items.value[to].name) {
+            _items.update { itemList ->
+                itemList.toMutableList().apply {
+                    add(to, removeAt(from))
+                }
+            }
+        }
+
         _order = _order.toMutableList().apply{
             val orderFrom = indexOf(_items.value[from].name)
             val orderTo = indexOf(_items.value[to].name)
@@ -176,8 +189,8 @@ fun ReorderableList(itemViewModel: ItemViewModel, modifier: Modifier) {
         contentPadding = PaddingValues(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(items, key = { item -> item.name }) { item ->
-            ReorderableItem(reorderableLazyListState, key = item.name) { isDragging ->
+        items(items, key = { item -> item.uuid }) { item ->
+            ReorderableItem(reorderableLazyListState, key = item.uuid) { isDragging ->
                 val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
 
                 Surface(
