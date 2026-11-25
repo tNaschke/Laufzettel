@@ -83,6 +83,10 @@ class ItemViewModel : ViewModel() {
             _order.add(newItem.name)
         }
 
+        if (_items.value.contains(newItem)) {
+            return
+        }
+
         _items.update { itemList ->
             itemList.toMutableList().apply {
                 add(newItem)
@@ -215,7 +219,10 @@ fun ItemSearch(itemViewModel: ItemViewModel, onExpandedChange: (Boolean) -> Unit
                 SearchBarDefaults.InputField(
                     query = addQueryState.text.toString(),
                     onQueryChange = { addQueryState.edit { replace(0, length, it) } },
-                    onSearch = { itemViewModel.add(Item(addQueryState.text.toString())) },
+                    onSearch = {
+                        itemViewModel.add(Item(addQueryState.text.toString()))
+                        onExpandedChange(false)
+                    },
                     expanded = true,
                     onExpandedChange = onExpandedChange
                 )
@@ -233,7 +240,10 @@ fun ItemSearch(itemViewModel: ItemViewModel, onExpandedChange: (Boolean) -> Unit
                             leadingContent = leadingContent,
                             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                             modifier = Modifier
-                                .clickable {}
+                                .clickable {
+                                    itemViewModel.add(Item(resultText))
+                                    onExpandedChange(false)
+                                }
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 4.dp)
                         )
